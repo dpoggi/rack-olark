@@ -7,7 +7,9 @@ Rack middleware which injects the Olark JavaScript code before the end of the bo
     use Rack::Olark, :id => '1234-567-89-0123', :options => 'like', :this => true, :orthis => 45
 
 Options become this line of JavaScript:
+
     olark.configure('key', value);
+
 Strings are quoted for you, you needn't worry about that.
 
 ## Copyright
