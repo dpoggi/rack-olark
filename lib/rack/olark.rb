@@ -37,7 +37,7 @@ module Rack
 
     def inject(response)
       @template = Haml::Engine.new(::File.read(::File.expand_path('../templates/olark.haml', __FILE__)), {:format => @format}).render self
-      response.gsub '</body>', @template + '</body>'
+      response.gsub '</body>', @template
     end
   end
 end
