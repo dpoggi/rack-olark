@@ -14,7 +14,9 @@ There are three special options: :id, :format, and :paths. :id is your Olark API
 
 :format is my (possibly lame) justification for using Haml in this project - this option is passed directly to Haml::Engine, and determines the form of the script tags that are inserted into your pages. Choices are :html4, :xhtml, and :html5, with a default of :html5.
 
-:paths decides which routes in your application will display the Olark chat box. It takes an array of routes, and you need to include the leading slash (/).
+:paths decides which routes in your application will display the Olark chat box. It takes an array of routes, and you need to include the leading slash (/). As of version 0.0.4, you can now describe routes in the :paths array with a Regexp as well, and any non-Regexp entries will be handled like this:
+
+    /^#{Regexp.escape(your_original_path_entry)}$/
 
 Example using options:
 

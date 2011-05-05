@@ -10,7 +10,7 @@ module Rack
       raise ArgumentError, "Need a valid Olark ID!" unless options[:id] and options[:id].length.eql? 16
       @app, @options = app, Defaults.merge(options)
       @id, @format, @paths = [@options.delete(:id), @options.delete(:format), @options.delete(:paths)]
-      @paths = [] unless @paths.class.eql? Array
+      @paths = @paths.class.eql?(Array) ? @paths.map {|path| path.class.eql?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/} : []
       @option_js = "olark.identify('#{@id}');"
       @options.each do |key, val|
         @option_js << "olark.configure('#{key.to_s}', #{[String, Symbol].include? val.class ? "'#{val.to_s}'" : val.to_s});"
@@ -22,8 +22,9 @@ module Rack
     end
 
     def _call(env)
-      @status, @headers, @response = @app.call(env)
-      return [@status, @headers, @response] unless html? and (@paths.empty? or @paths.include? Rack::Request.new(env).path_info)
+      @status, @headers, @response = @app.call env
+      @request = Rack::Request.new env
+      return [@status, @headers, @response] unless html? and (@paths.empty? or @paths.select {|path| @request.path_info =~ path}.length > 0)
       response = Rack::Response.new [], @status, @headers
       @response.each {|fragment| response.write inject(fragment)}
       response.finish
