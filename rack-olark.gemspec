@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.email       = ["dan.poggi@gmail.com"]
   s.homepage    = "https://github.com/dpoggi/rack-olark"
   s.summary     = %q{Rack middleware for embedding Olark.}
-  s.description = %q{Rack middleware which injects the Olark JavaScript code before the end of the body of any HTML document being sent to the client. Code from rack/google-analytics has been used liberally and expanded/trimmed down where needed. Mucho thanks to Lee Hambley and other cool rack/google-analytics bros.}
+  s.description = %q{Rack middleware which injects the Olark JavaScript code before the end of the body of any HTML document being sent to the client. See README.md for details.}
 
   s.rubyforge_project = "rack-olark"
 
