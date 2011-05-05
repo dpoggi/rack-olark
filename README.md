@@ -4,20 +4,22 @@ Rack middleware which injects the Olark JavaScript code before the end of the bo
 ## Usage
 
     require 'rack/olark'
-    use Rack::Olark, :id => '1234-567-89-0123', :format => :html5, :paths => ['/', '/aboutus'], :option => :value
+    use Rack::Olark, :id => '1234-567-89-0123'
 
-Rack::Olark has three special options, and the rest are passed along to Olark like this (strings are quoted for you):
+Most of the options you give Rack::Olark are passed along to Olark in the following format:
 
     olark.configure('key', value);
 
-The three special options are :id, :format, and :paths. :id is your Olark API ID, and the middleware won't let your Rack app boot without it.
+There are three special options: :id, :format, and :paths. :id is your Olark API ID, and the middleware won't let your Rack app boot without it.
 
-Format is my justification for using Haml in this project - this option is passed directly to Haml::Engine, and determines the form of the script tags that are inserted into your pages. Choices are :html4, :xhtml, and :html5, with a default of :html5.
+:format is my (possibly lame) justification for using Haml in this project - this option is passed directly to Haml::Engine, and determines the form of the script tags that are inserted into your pages. Choices are :html4, :xhtml, and :html5, with a default of :html5.
 
-Paths decides which routes in your application will display the Olark chat box. It takes an array of routes, and you need to include the leading slash (/). Example:
+:paths decides which routes in your application will display the Olark chat box. It takes an array of routes, and you need to include the leading slash (/).
+
+Example using options:
 
     require 'rack/olark'
-    use Rack::Olark, :id => '1234-567-89-0123', :format => :xhtml, :paths => ['/', '/aboutus']
+    use Rack::Olark, :id => '1234-567-89-0123', :format => :xhtml, :paths => ['/', '/aboutus'], :olark => :options, :go => :here
 
 ## Acknowledgements
 
