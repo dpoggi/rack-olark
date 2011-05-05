@@ -1,14 +1,16 @@
 require 'rack'
+require 'rack/request'
 require 'haml'
 
 module Rack
   class Olark
-    Defaults = {:format => :html5}
+    Defaults = {:format => :html5, :paths => []}
 
     def initialize(app, options = {})
       raise ArgumentError, "Need a valid Olark ID!" unless options[:id] and options[:id].length.eql? 16
       @app, @options = app, Defaults.merge(options)
-      @id, @format = [@options.delete(:id), @options.delete(:format)]
+      @id, @format, @paths = [@options.delete(:id), @options.delete(:format), @options.delete(:paths)]
+      @paths = [] unless @paths.class.eql? Array
       @option_js = "olark.identify('#{@id}');"
       @options.each do |key, val|
         @option_js << "olark.configure('#{key.to_s}', #{[String, Symbol].include? val.class ? "'#{val.to_s}'" : val.to_s});"
@@ -21,7 +23,7 @@ module Rack
 
     def _call(env)
       @status, @headers, @response = @app.call(env)
-      return [@status, @headers, @response] unless html?
+      return [@status, @headers, @response] unless html? and (@paths.empty? or @paths.include? Rack::Request.new(env).path_info)
       response = Rack::Response.new [], @status, @headers
       @response.each {|fragment| response.write inject(fragment)}
       response.finish
