@@ -1,4 +1,4 @@
-# Rack Olark
+# Rack::Olark
 Rack middleware which injects the Olark JavaScript code before the end of the body of any HTML document being sent to the client. 
 
 ## Usage
