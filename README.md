@@ -3,7 +3,6 @@ Rack middleware which injects the Olark JavaScript code before the end of the bo
 
 ## Usage
 
-    require 'rack/olark'
     use Rack::Olark, :id => '1234-567-89-0123'
 
 Most of the options you give Rack::Olark are passed along to Olark in the following format:
@@ -20,7 +19,6 @@ There are three special options: :id, :format, and :paths. :id is your Olark API
 
 Example using options:
 
-    require 'rack/olark'
     use Rack::Olark, :id => '1234-567-89-0123', :format => :xhtml, :paths => ['/', '/aboutus'], 'box.corner_position' => 'BL', 'box.start_hidden' => true
 
 ## Acknowledgements
