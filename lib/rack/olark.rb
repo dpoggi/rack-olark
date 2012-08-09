@@ -13,6 +13,7 @@ module Rack
       unless options[:id] && options[:id].length == 16
         raise ArgumentError, 'Need a valid Olark ID!'
       end
+
       @app, @options = app, DEFAULTS.merge(options)
       @id, @tag, @paths = [@options.delete(:id),
                            @options.delete(:tag),
@@ -37,6 +38,13 @@ module Rack
       @status, @headers, @response = @app.call(env)
       @request = Rack::Request.new(env)
       valid_path = @paths.select { |path| @request.path_info =~ path }.length > 0
+
+      # Deprecation warning, repeated and annoying. Sorry about your log space.
+      if @options[:format]
+        logger = env['rack.errors']
+        logger.write("[#{Time.now.strftime("%Y-%M-%d %H:%M:%S")}] WARNING  ")
+        logger.write("Rack::Olark: The 'format' option no longer works! See README.md for details.\n")
+      end
 
       if html? && (@paths.empty? || valid_path)
         response = Rack::Response.new([], @status, @headers)
