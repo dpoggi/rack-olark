@@ -1,24 +1,25 @@
 require 'rack'
 require 'rack/request'
-require 'haml'
+require 'erb'
 
 module Rack
   class Olark
-    Defaults = {:format => :html5, :paths => []}
+    DEFAULTS = {
+      tag: '<script>',
+      paths: []
+    }
 
     def initialize(app, options = {})
-      if not (options[:id] and options[:id].length.eql? 16)
+      unless options[:id] && options[:id].length == 16
         raise ArgumentError, 'Need a valid Olark ID!'
       end
-      @app, @options = app, Defaults.merge(options)
-      @id, @format, @paths = [@options.delete(:id),
-                              @options.delete(:format),
-                              @options.delete(:paths)]
+      @app, @options = app, DEFAULTS.merge(options)
+      @id, @tag, @paths = [@options.delete(:id),
+                           @options.delete(:tag),
+                           @options.delete(:paths)]
 
-      if @paths.class.eql? Array
-        @paths = @paths.map do |path|
-          path.class.eql?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/
-        end
+      if @paths.is_a?(Array)
+        @paths.map! { |path| path.is_a?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/ }
       else
         @paths = []
       end
@@ -30,34 +31,29 @@ module Rack
       end
     end
 
-    def call(env)
-      dup._call(env)
-    end
+    def call(env); dup._call(env); end
 
     def _call(env)
       @status, @headers, @response = @app.call(env)
       @request = Rack::Request.new(env)
+      valid_path = @paths.select { |path| @request.path_info =~ path }.length > 0
 
-      valid_path = @paths.select {|path| @request.path_info =~ path}.length > 0
-      return [@status, @headers, @response] unless html? and (@paths.empty? or valid_path)
-
-      response = Rack::Response.new([], @status, @headers)
-      @response.each {|fragment| response.write(inject(fragment))}
-      response.finish
+      if html? && (@paths.empty? || valid_path)
+        response = Rack::Response.new([], @status, @headers)
+        @response.each { |fragment| response.write(inject(fragment)) }
+        response.finish
+      else
+        [@status, @headers, @response]
+      end
     end
 
     private
-
-    def html?
-      @headers['Content-Type'] =~ /html/
-    end
+    def html?; @headers['Content-Type'] =~ /html/; end
 
     def inject(response)
-      template_contents = ::File.read(::File.expand_path('../templates/olark.haml',
-                                                         __FILE__))
-      @template = Haml::Engine.new(template_contents,
-                                   {:format => @format}).render(self)
-      response.gsub '</body>', @template
+      template_file = ::File.read(::File.expand_path('../templates/olark.erb', __FILE__))
+      @template = ERB.new(template_file).result(binding)
+      response.gsub('</body>', @template)
     end
   end
 end
