@@ -31,4 +31,4 @@ Code from rack/google-analytics has been used liberally and expanded/trimmed dow
 
 ## Copyright
 
-Copyright (C) 2012 Dan Poggi. MIT License, see LICENSE for details.
+Copyright (C) 2011 Dan Poggi. MIT License, see LICENSE for details.
