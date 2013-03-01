@@ -26,9 +26,7 @@ Example using options:
 Note that in order to use custom Olark JavaScript options, you may have to revert to using hashrocket syntax.
 
 ## Acknowledgements
-
-Code from rack/google-analytics has been used liberally and expanded/trimmed down where needed. Mucho thanks to Lee Hambley and other cool rack/google-analytics bros.
+Code from rack/google-analytics has been used liberally and expanded/trimmed down where needed. Mucho thanks to Lee Hambley and other rack/google-analytics folks.
 
 ## Copyright
-
 Copyright (C) 2011 Dan Poggi. MIT License, see LICENSE for details.
