@@ -1,32 +1,39 @@
 # Rack::Olark
-Rack middleware which injects the Olark JavaScript code before the end of the body of any HTML document being sent to the client. 
+
+Middleware which inserts Olark JavaScript embed code before </body> in HTML served by Rack.
 
 ## Usage
 
+In `config.ru`, or wherever else you mount middleware:
+
     use Rack::Olark, id: '1234-567-89-0123'
 
-Most of the options you give Rack::Olark are passed along to Olark in the following format:
+All non-special options given to Rack::Olark are passed through as JavaScript in the following manner:
 
     olark.configure('key', value);
 
-There are three special options: id, tag, and paths. id is your Olark API ID, and the middleware won't let your Rack app boot without it.
+There are two special options: `id` and `paths`.
 
-tag is a custom script tag to be used at the beginning of the Olark code. Most people should never need this, and it will default to just `<script>` (HTML5-style). 
+`id` is your Olark Site-ID, and the middleware won't allow your app to boot without it.
 
-paths decides which routes in your application will display the Olark chat box. It takes an array of routes, and you need to include the leading slash (/). If you don't give an array for paths, it is empty by default, and this will cause the Olark code to be inserted on every route. As of version 0.0.4, you can now describe routes in the paths array with a Regexp as well, and any non-Regexp entries will be handled like this:
+`paths` decides which of your routes will display the Olark chat box. It accepts an array of routes, with the leading slash (`/`) included. `paths` defaults to empty array (`[]`), causing Olark to be embedded for every route. As of version 0.0.4, routes in `paths` can also be described with a Regexp. Non-Regexp `paths` entries will be handled using:
 
-    /^#{Regexp.escape(your_original_path_entry)}$/
+    /^#{Regexp.escape('/my/path')}$/
 
-Example using options:
+Example of usage with options:
 
-    use Rack::Olark, id: '1234-567-89-0123',
-                     tag: '<script type="text/javascript">',
-                     paths: ['/', '/aboutus']
+    use Rack::Olark, {
+      :id                          => '1234-567-89-0123',
+      :paths                       => ['/', '/aboutus'],
+      'features.attention_grabber' => true,
+    }
 
-Note that in order to use custom Olark JavaScript options, you may have to revert to using hashrocket syntax.
+Note that in order to use custom Olark JavaScript options, you may have to revert to hashrocket syntax, as they tend to contain characters Ruby doesn't like in symbols.
 
 ## Acknowledgements
-Code from rack/google-analytics has been used liberally and expanded/trimmed down where needed. Mucho thanks to Lee Hambley and other rack/google-analytics folks.
+
+Originally based on code from [rack-google-analytics](https://github.com/kangguru/rack-google-analytics). Never would've gotten started without them!
 
 ## Copyright
+
 Copyright (C) 2011 Dan Poggi. MIT License, see LICENSE for details.

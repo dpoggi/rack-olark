@@ -1,67 +1,69 @@
+require 'erb'
+require 'json'
 require 'rack'
 require 'rack/request'
-require 'erb'
 
 module Rack
   class Olark
-    DEFAULTS = {
-      tag: '<script>',
-      paths: []
-    }
+    TEMPLATE_PATH = ::File.expand_path(
+      ::File.join('..', 'templates', 'olark.erb'),
+      __FILE__
+    )
 
     def initialize(app, options = {})
-      unless options[:id] && options[:id].length == 16
-        raise ArgumentError, 'Need a valid Olark ID!'
+      @app = app
+
+      # Validity check on Site-ID
+      site_id = (options.delete(:id) || '').gsub(/[^0-9-]/, '')
+      unless site_id.length == 16
+        raise ArgumentError, 'rack-olark requires a valid Olark Site-ID!'
       end
 
-      @app, @options = app, DEFAULTS.merge(options)
-      @id, @tag, @paths = [@options.delete(:id),
-                           @options.delete(:tag),
-                           @options.delete(:paths)]
+      # Deprecation warnings
+      deprecation_warning('format') if options.delete(:format)
+      deprecation_warning('tag') if options.delete(:tag)
 
-      if @paths.is_a?(Array)
-        @paths.map! { |path| path.is_a?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/ }
-      else
-        @paths = []
+      # Is it a Regexp? No? Then escape it, and make it a Regexp.
+      @paths = (options.delete(:paths) || []).map do |path|
+        path.is_a?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/
       end
+      # Let's please not call Array#empty? on every request.
+      @inject_all = @paths.empty?
 
-      @option_js = "olark.identify('#{@id}');"
-      @options.each do |key, val|
-        val = [String, Symbol].include?(val.class) ? "'#{val.to_s}'" : val.to_s
-        @option_js << "olark.configure('#{key.to_s}', #{val});"
-      end
+      js = options.map { |k, v| olarkify(k, v) }.join
+      @html = ERB.new(::File.read(TEMPLATE_PATH)).result(binding)
     end
 
-    def call(env); dup._call(env); end
+    def call(env)
+      status, headers, body = @app.call(env)
+      request = Rack::Request.new(env)
 
-    def _call(env)
-      @status, @headers, @response = @app.call(env)
-      @request = Rack::Request.new(env)
-      valid_path = @paths.select { |path| @request.path_info =~ path }.length > 0
-
-      # Deprecation warning, repeated and annoying. Sorry about your log space.
-      if @options[:format]
-        logger = env['rack.errors']
-        logger.write("[#{Time.now.strftime("%Y-%M-%d %H:%M:%S")}] WARNING  ")
-        logger.write("Rack::Olark: The 'format' option no longer works! See README.md for details.\n")
-      end
-
-      if html? && (@paths.empty? || valid_path)
-        response = Rack::Response.new([], @status, @headers)
-        @response.each { |fragment| response.write(inject(fragment)) }
+      if html?(headers) && (@inject_all || should_inject?(request))
+        response = Rack::Response.new([], status, headers)
+        body.each do |fragment|
+          response.write(fragment.gsub('</body>', @html))
+        end
         response.finish
       else
-        [@status, @headers, @response]
+        [status, headers, body]
       end
     end
 
     private
-    def html?; @headers['Content-Type'] =~ /html/; end
+    def olarkify(key, val)
+      "olark.configure(#{key.to_s.to_json}, #{val.to_json});"
+    end
 
-    def inject(response)
-      template_file = ::File.read(::File.expand_path('../templates/olark.erb', __FILE__))
-      @template = ERB.new(template_file).result(binding)
-      response.gsub('</body>', @template)
+    def deprecation_warning(option)
+      STDOUT.puts("Rack::Olark: The '#{option}' option is deprecated and no longer functions! See README.md for details.")
+    end
+
+    def html?(headers)
+      (Rack::Utils::HeaderHash.new(headers)['Content-Type'] || '').include?('html')
+    end
+
+    def should_inject?(request)
+      @paths.select { |p| request.path_info =~ p }.length > 0
     end
   end
 end
