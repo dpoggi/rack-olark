@@ -63,7 +63,7 @@ module Rack
     end
 
     def should_inject?(request)
-      @paths.select { |p| request.path_info =~ p }.length > 0
+      @paths.map { |p| request.path_info =~ p }.include?(true)
     end
   end
 end
